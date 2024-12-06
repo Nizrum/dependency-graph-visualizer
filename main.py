@@ -56,7 +56,7 @@ def parse_commit(commit_hash, raw_content):
         elif line.startswith('author '):
             parts = line.split()
             timestamp = int(parts[-2])
-            commit_data['date'] = datetime.utcfromtimestamp(timestamp)
+            commit_data['date'] = datetime.fromtimestamp(timestamp)
         elif line.strip() == '':
             commit_data['message'] = '\n'.join(lines[lines.index(line) + 1:]).strip()
             break
