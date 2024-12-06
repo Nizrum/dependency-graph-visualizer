@@ -5,9 +5,6 @@ from datetime import datetime
 
 
 def parse_object(object_hash, config, description=None):
-    """
-    Извлечь информацию из git-объекта (commit, tree, blob).
-    """
     object_path = os.path.join(config['repo_path'], '.git', 'objects', object_hash[:2], object_hash[2:])
     with open(object_path, 'rb') as file:
         raw_object_content = zlib.decompress(file.read())
@@ -34,9 +31,6 @@ def parse_object(object_hash, config, description=None):
 
 
 def parse_commit(commit_hash, raw_content):
-    """
-    Парсинг git-объекта коммита, включая информацию о дереве, родителях, дате и сообщении.
-    """
     content = raw_content.decode()
     lines = content.split('\n')
 
@@ -65,9 +59,6 @@ def parse_commit(commit_hash, raw_content):
 
 
 def parse_tree(raw_content, config):
-    """
-    Парсинг git-объекта дерева.
-    """
     children = []
     rest = raw_content
 
@@ -81,9 +72,6 @@ def parse_tree(raw_content, config):
 
 
 def find_last_commit_before_date(commit_hash, cutoff_date, config):
-    """
-    Рекурсивно находит последний коммит, сделанный до cutoff_date.
-    """
     current_commit = parse_object(commit_hash, config)
 
     if current_commit['type'] != 'commit':
@@ -100,9 +88,6 @@ def find_last_commit_before_date(commit_hash, cutoff_date, config):
 
 
 def build_commit_graph(starting_commit, cutoff_date, config):
-    """
-    Построение полного графа зависимостей с включением trees и blobs.
-    """
     visited = set()
     stack = [starting_commit]
     graph = {}
@@ -124,9 +109,6 @@ def build_commit_graph(starting_commit, cutoff_date, config):
 
 
 def generate_plantuml(graph, output_path):
-    """
-    Генерация файла PlantUML с включением commit, tree и blob объектов.
-    """
     with open(output_path, 'w') as f:
         f.write('@startuml\n')
         f.write('skinparam linetype ortho\n')
@@ -144,18 +126,12 @@ def generate_plantuml(graph, output_path):
 
 
 def generate_graph_image(visualizer_path, plantuml_path):
-    """
-    Генерирует изображение с графом с помощью PlantUML и возвращает путь к созданному изображению.
-    """
     output_image = plantuml_path.replace('.puml', '.png')
     subprocess.run(["java", "-jar", visualizer_path, "-tpng", plantuml_path])
     return output_image
 
 
 def open_image(image_path):
-    """
-    Открывает изображение с графом в стандартной программе просмотра.
-    """
     if os.name == 'posix':  # macOS или Linux
         subprocess.run(["open", image_path])
     elif os.name == 'nt':  # Windows
