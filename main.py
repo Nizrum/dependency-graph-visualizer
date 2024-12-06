@@ -123,6 +123,47 @@ def build_commit_graph(starting_commit, cutoff_date, config):
     return graph[starting_commit]
 
 
+def generate_plantuml(graph, output_path):
+    """
+    Генерация файла PlantUML с включением commit, tree и blob объектов.
+    """
+    with open(output_path, 'w') as f:
+        f.write('@startuml\n')
+        f.write('skinparam linetype ortho\n')
+
+        def write_node_relations(node):
+            node_label = f'"{node["label"]}"'
+            for child in node['children']:
+                child_label = f'"{child["label"]}"'
+                f.write(f'{node_label} --> {child_label}\n')
+                write_node_relations(child)
+
+        write_node_relations(graph)
+
+        f.write('@enduml\n')
+
+
+def generate_graph_image(visualizer_path, plantuml_path):
+    """
+    Генерирует изображение с графом с помощью PlantUML и возвращает путь к созданному изображению.
+    """
+    output_image = plantuml_path.replace('.puml', '.png')
+    subprocess.run(["java", "-jar", visualizer_path, "-tpng", plantuml_path])
+    return output_image
+
+
+def open_image(image_path):
+    """
+    Открывает изображение с графом в стандартной программе просмотра.
+    """
+    if os.name == 'posix':  # macOS или Linux
+        subprocess.run(["open", image_path])
+    elif os.name == 'nt':  # Windows
+        subprocess.run(["start", image_path], shell=True)
+    else:
+        print(f"Не удалось автоматически открыть файл: {image_path}")
+
+
 def main():
     import argparse
     parser = argparse.ArgumentParser(description="Visualize git commit dependencies.")
@@ -145,7 +186,13 @@ def main():
 
     graph = build_commit_graph(starting_commit, cutoff_date, config)
 
-    print(graph)
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    plantuml_path = os.path.join(script_dir, 'graph.puml')
+
+    generate_plantuml(graph, plantuml_path)
+
+    image_path = generate_graph_image(args.visualizer, plantuml_path)
+    open_image(image_path)
 
 
 if __name__ == "__main__":
