@@ -1,5 +1,6 @@
 import os
 import zlib
+import subprocess
 from datetime import datetime
 
 
@@ -77,3 +78,75 @@ def parse_tree(raw_content, config):
         children.append(parse_object(sha1, config, description=name.decode()))
 
     return children
+
+
+def find_last_commit_before_date(commit_hash, cutoff_date, config):
+    """
+    Рекурсивно находит последний коммит, сделанный до cutoff_date.
+    """
+    current_commit = parse_object(commit_hash, config)
+
+    if current_commit['type'] != 'commit':
+        return None
+
+    if not current_commit.get('date') or current_commit['date'] > cutoff_date:
+        for parent in current_commit.get('parents', []):
+            result = find_last_commit_before_date(parent, cutoff_date, config)
+            if result:
+                return result
+        return None
+
+    return commit_hash
+
+
+def build_commit_graph(starting_commit, cutoff_date, config):
+    """
+    Построение полного графа зависимостей с включением trees и blobs.
+    """
+    visited = set()
+    stack = [starting_commit]
+    graph = {}
+
+    while stack:
+        current = stack.pop()
+        if current in visited:
+            continue
+        visited.add(current)
+
+        node = parse_object(current, config)
+        if node['type'] == 'commit' and node.get('date') and node['date'] > cutoff_date:
+            continue
+
+        graph[current] = node
+        stack.extend(child['hash'] for child in node['children'])
+
+    return graph[starting_commit]
+
+
+def main():
+    import argparse
+    parser = argparse.ArgumentParser(description="Visualize git commit dependencies.")
+    parser.add_argument('--visualizer', required=True, help='Path to the PlantUML executable.')
+    parser.add_argument('--repo-path', required=True, help='Path to the git repository.')
+    parser.add_argument('--date', required=True, help='Cutoff date for commits (YYYY-MM-DD).')
+    args = parser.parse_args()
+
+    config = {"repo_path": args.repo_path}
+    cutoff_date = datetime.strptime(args.date, '%Y-%m-%d')
+
+    head_path = os.path.join(config['repo_path'], '.git', 'refs', 'heads', 'master')
+    with open(head_path, 'r') as f:
+        last_commit = f.read().strip()
+
+    starting_commit = find_last_commit_before_date(last_commit, cutoff_date, config)
+    if not starting_commit:
+        print(f"No commits found before {cutoff_date}.")
+        return
+
+    graph = build_commit_graph(starting_commit, cutoff_date, config)
+
+    print(graph)
+
+
+if __name__ == "__main__":
+    main()
