@@ -37,10 +37,13 @@ Git Dependency Graph Visualizer — это инструмент для визу�
 Для использования программы необходимо скачать PlantUML и убедиться, что у вас установлен Java.
 
 1. Запуск программы с параметрами командной строки.
+<img width="999" alt="Screenshot 2024-12-06 at 11 49 12" src="https://github.com/user-attachments/assets/944fb89d-df0d-4a6f-aed0-a612d1b53e79">
 
 2. Сгенерированный файл graph.puml.
+<img width="740" alt="Screenshot 2024-12-06 at 11 49 41" src="https://github.com/user-attachments/assets/3342d61d-a6d8-4255-a84d-2eebb1d57072">
 
 3. Сгенерированной изображение graph.png.
+![graph](https://github.com/user-attachments/assets/355a30ac-e474-46e5-bd88-7fd33ef24a7c)
 
 ## Результаты тестирования
-
+<img width="998" alt="Screenshot 2024-12-06 at 11 58 42" src="https://github.com/user-attachments/assets/2219ee8c-c4ad-41a8-9019-0520a4648e47">
